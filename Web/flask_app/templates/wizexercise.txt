@@ -1,0 +1,2 @@
+Ensure the built container image contains an arbitrary file
+called wizexercise.txt with some content.
