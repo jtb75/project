@@ -1,5 +1,6 @@
 resource "aws_s3_bucket" "backup" {
-  bucket = "project-backup-${random_string.suffix.result}"
+  bucket        = "project-backup-${random_string.suffix.result}"
+  force_destroy = true
 }
 
 
