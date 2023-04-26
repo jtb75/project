@@ -15,6 +15,6 @@ variable "admin_ip" {
 }
 
 variable "key_pair" {
-  default     = "nv-pan"
+  default     = "project"
   description = "Key pair to be used on ec2 instances"
 }
