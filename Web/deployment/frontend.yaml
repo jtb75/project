@@ -1,0 +1,37 @@
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: project
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: jtb75/project:latest
+          imagePullPolicy: "Always"
+          ports:
+            - containerPort: 80 # Exposes container port
+          envFrom:
+            - configMapRef:
+                name: mongo-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend # Sets service name
+  namespace: project
+  labels:
+    app: frontend # Labels and Selectors
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 80
+  selector:
+    app: frontend
