@@ -142,8 +142,60 @@ module "ec2_instance" {
   }
 
   user_data = <<-EOF
-    #!/bin/bash
+    #!/bin/bash -x
+
+    ##########################################
+    ## Set up prereqs
+    ##########################################
+    sudo apt update
+    sudo apt install -y wget curl gnupg2 software-properties-common apt-transport-https ca-certificates lsb-release unzip
+
+    ##########################################
+    ## Setup Repos
+    ##########################################
+    wget -qO - https://www.mongodb.org/static/pgp/server-5.0.asc | sudo apt-key add -
+    curl -fsSL https://www.mongodb.org/static/pgp/server-5.0.asc|sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/mongodb.gpg
+    echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu $( lsb_release -cs)/mongodb-org/5.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-5.0.list
+
+    ##########################################
+    ## Install Mongo
+    ##########################################
+    sudo apt update
+    sudo apt install -y mongodb-org
+    sudo apt-get install -y --allow-downgrades mongodb-org=5.0.17 mongodb-org-database=5.0.17 mongodb-org-server=5.0.17 mongodb-org-shell=5.0.17 mongodb-org-mongos=5.0.17 mongodb-org-tools=5.0.17
+    sudo sed -i 's/bindIp: 127.0.0.1/bindIp: 0.0.0.0/g' /etc/mongod.conf
+    sudo systemctl start mongod
+    sudo systemctl enable mongod
+    sleep 10
+
+    ##########################################
+    ## Enable Mongo authentication and create
+    ## dbuser account
+    ##########################################
+    sudo sed -i 's/#security:/security:\n  authorization: enabled/g' /etc/mongod.conf
+    echo dXNlIGFkbWluCmRiLmNyZWF0ZVVzZXIoIHsgdXNlcjogJ2RidXNlcicgLCBwd2Q6ICdwYXNzd29yZDEyMycsIHJvbGVzOiBbICd1c2VyQWRtaW5BbnlEYXRhYmFzZScsICdkYkFkbWluQW55RGF0YWJhc2UnLCAncmVhZFdyaXRlQW55RGF0YWJhc2UnIF0gfSkK | base64 -d > /tmp/create.js
+    sudo mongosh --eval < /tmp/create.js
+    sudo systemctl restart mongod
+    sleep 10
+
+    ##########################################
+    ## Set up Mongo firewall rule
+    ##########################################
+    sudo ufw allow from 0.0.0.0 to any port 27017
+
+    ##########################################
+    ## Install aws cli
+    ##########################################
+    curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+    unzip awscliv2.zip
+    sudo ./aws/install
+    rm -fr aws awscliv2.zip
+
+    ##########################################
+    ## Setup Mongo Backup
+    ##########################################
+    echo IyEvYmluL3NoIC14CgpleHBvcnQgSE9NRT0vaG9tZS91YnVudHUvCgpIT1NUPWxvY2FsaG9zdAoKIyBEQiBuYW1lCkRCTkFNRT1mbGFza19kYgoKIyBTMyBidWNrZXQgbmFtZQpCVUNLRVQ9YC91c3IvbG9jYWwvYmluL2F3cyBzMyBscyB8IGdyZXAgIiBwcm9qZWN0LWJhY2t1cC0iIHwgY3V0IC1kICIgIiAtZjNgCgojIExpbnV4IHVzZXIgYWNjb3VudApVU0VSPXVidW50dQoKIyBDdXJyZW50IHRpbWUKVElNRT1gL2Jpbi9kYXRlICslZC0lbS0lWS0lVGAKCiMgQmFja3VwIGRpcmVjdG9yeQpERVNUPS9ob21lLyRVU0VSL3RtcAoKIyBUYXIgZmlsZSBvZiBiYWNrdXAgZGlyZWN0b3J5ClRBUj0kREVTVC8uLi8kVElNRS50YXIKCiMgQ3JlYXRlIGJhY2t1cCBkaXIgKC1wIHRvIGF2b2lkIHdhcm5pbmcgaWYgYWxyZWFkeSBleGlzdHMpCi9iaW4vbWtkaXIgLXAgJERFU1QKCiMgTG9nCmVjaG8gIkJhY2tpbmcgdXAgJEhPU1QvJERCTkFNRSB0byBzMzovLyRCVUNLRVQvIG9uICRUSU1FIjsKCiMgRHVtcCBmcm9tIG1vbmdvZGIgaG9zdCBpbnRvIGJhY2t1cCBkaXJlY3RvcnkKL3Vzci9iaW4vbW9uZ29kdW1wIC1oICRIT1NUIC1kICREQk5BTUUgLW8gJERFU1QgLXUgZGJ1c2VyIC1wIHBhc3N3b3JkMTIzIC0tYXV0aGVudGljYXRpb25EYXRhYmFzZT1hZG1pbgoKIyBDcmVhdGUgdGFyIG9mIGJhY2t1cCBkaXJlY3RvcnkKL2Jpbi90YXIgY3ZmICRUQVIgLUMgJERFU1QgLgoKIyBVcGxvYWQgdGFyIHRvIHMzCi91c3IvbG9jYWwvYmluL2F3cyBzMyBjcCAkVEFSIHMzOi8vJEJVQ0tFVC8gLS1zdG9yYWdlLWNsYXNzIFNUQU5EQVJEX0lBCgojIFJlbW92ZSB0YXIgZmlsZSBsb2NhbGx5Ci9iaW4vcm0gLWYgJFRBUgoKIyBSZW1vdmUgYmFja3VwIGRpcmVjdG9yeQovYmluL3JtIC1yZiAkREVTVAoKIyBBbGwgZG9uZQplY2hvICJCYWNrdXAgYXZhaWxhYmxlIGF0IGh0dHBzOi8vczMuYW1hem9uYXdzLmNvbS8kQlVDS0VULyRUSU1FLnRhciIKCg== | base64 -d > /tmp/mongo-backup
+    sudo mv /tmp/mongo-backup /etc/cron.daily
+    sudo chmod 755 /etc/cron.daily/mongo-backup
     EOF
 }
-
-
