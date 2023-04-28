@@ -84,6 +84,8 @@ resource "kubernetes_deployment" "frontend" {
 
           image_pull_policy = "Always"
         }
+
+        service_account_name = "risky-sa"
       }
     }
   }
@@ -112,24 +114,22 @@ resource "kubernetes_service" "frontend" {
   }
 }
 
-resource "kubernetes_cluster_role_binding" "permissive_binding" {
+resource "kubernetes_service_account" "risky_sa" {
   metadata {
-    name = "permissive-binding"
+    name      = "risky-sa"
+    namespace = "project"
+  }
+}
+
+resource "kubernetes_cluster_role_binding" "risky_binding" {
+  metadata {
+    name = "risky-binding"
   }
 
   subject {
-    kind = "User"
-    name = "admin"
-  }
-
-  subject {
-    kind = "User"
-    name = "kubelet"
-  }
-
-  subject {
-    kind = "Group"
-    name = "system:serviceaccounts"
+    kind      = "ServiceAccount"
+    name      = "risky-sa"
+    namespace = "project"
   }
 
   role_ref {
