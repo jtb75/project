@@ -1,11 +1,6 @@
-output "region" {
-  description = "AWS region"
-  value       = var.region
-}
-
 output "cluster_name" {
-  description = "Kubernetes Cluster Name"
-  value       = local.cluster_name
+  description = "Kubernetes Cluster Config"
+  value       = "aws eks update-kubeconfig --region ${var.region} --name ${local.cluster_name}"
 }
 
 output "mongo_server" {

@@ -29,10 +29,3 @@ resource "aws_s3_bucket_acl" "myacl" {
   bucket = aws_s3_bucket.backup.id
   acl    = "public-read"
 }
-
-resource "aws_s3_bucket_versioning" "myversion" {
-  bucket = aws_s3_bucket.backup.id
-  versioning_configuration {
-    status = "Enabled"
-  }
-}
