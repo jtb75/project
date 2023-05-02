@@ -35,3 +35,7 @@ The terraform apply output will include the:
 *   Load Balancer path to frontend application
 *   The kubernetes cluster information for obtaining kubeconfig
 *   The public IP address of the Mongo database
+
+## Directory Layout
+**IAC**: Contains all Terraform files for provisioning environment
+**Web**: Contains the web application, kubernetes yaml templates, and Dockerfile for creating app deployment
