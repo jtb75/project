@@ -1,3 +1,4 @@
+'''Handlers to paint and make DB read/writes'''
 import os
 from flask import Flask, render_template, request, url_for, redirect
 from pymongo import MongoClient
@@ -16,12 +17,16 @@ basic_auth = BasicAuth(app)
 client = MongoClient(
     'mongod', 27017, username=os.environ['DB_USER'], password=os.environ['DB_PASSWORD'])
 
+# Initiate DB connection Mongo 'flask_db' database
 db = client.flask_db
+
+# Gather all todo items from 'todos' collection
 todos = db.todos
 
 
 @app.route('/', methods=('GET', 'POST'))
 def index():
+    '''Handles reloads and submissions for new todos'''
     if request.method == 'POST':
         content = request.form['content']
         degree = request.form['degree']
@@ -34,5 +39,6 @@ def index():
 
 @app.post('/<id>/delete/')
 def delete(id):
+    '''Handles deletes of todos and redirects back to index'''
     todos.delete_one({"_id": ObjectId(id)})
     return redirect(url_for('index'))
