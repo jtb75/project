@@ -12,3 +12,9 @@ output "frontend_lb" {
   description = "Frontend Load Balncer"
   value       = kubernetes_service.frontend.status.0.load_balancer.0.ingress.0.hostname
 }
+
+
+output "s3_bucket" {
+  description = "S3 Backup Bucket"
+  value       = aws_s3_bucket.backup.bucket_domain_name
+}
