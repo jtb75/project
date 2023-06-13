@@ -10,9 +10,6 @@ Key Items for task:
 
 ## AWS Architecture 🛬
 
-The environment was created and provisioned using Terraform to deliver the following architecture:
-
-![](https://33333.cdn.cke-cs.com/kSW7V9NHUXugvhoQeFaf/images/e7f6c347f5a184e0b268d951d17b23cd95a636bc0118e394.png)
 
 ## Kubernetes Architecture 🛬
 
