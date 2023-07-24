@@ -23,6 +23,7 @@ resource "aws_iam_role" "mongo_ec2" {
 EOF
 }
 
+
 resource "aws_iam_role_policy" "mongo_ec2" {
   name = "risky_policy"
   role = aws_iam_role.mongo_ec2.id
