@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       SCAN_PATH: "./IAC" # Set the relative path in the repo to scan
-      POLICY: "jtb75-compliance-policy" # Set the desired Wiz-cli policy to use
+      POLICY: "jtb75-compliance-cicd-policy" # Set the desired Wiz-cli policy to use
 
     # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
     defaults:
